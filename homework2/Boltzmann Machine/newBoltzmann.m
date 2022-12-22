@@ -17,12 +17,12 @@ nrOfHiddenNeurons = length(MValues);
 nrOfPatterns = length(allInputs);
 trials = 1000;
 miniBatches = 20;
-k = 200;
-eta = 0.01;
+k = 2000;
+eta = 0.002;
 nOut = 3000;
 nIn = 2000;
 dKLSum = zeros(1,nrOfHiddenNeurons);
-counter = 3;
+counter = 1;
 
 
 
@@ -36,7 +36,7 @@ for i = 1:length(MValues)
     dKL(i) = 0;
     end
 end
-plot(MValues, dKL)
+plot(MValues, dKL,'DisplayName','Upper Bound')
 hold on
 
 
@@ -49,8 +49,8 @@ for iHiddenNeuron = 1:nrOfHiddenNeurons
     
         
         % Initializing neurons
-        v = zeros(N,1);
-        h = zeros(M,1);
+        visibleNeurons = zeros(N,1);
+        hiddenNeurons = zeros(M,1);
         
         % Initial weights and thresholds
         weights = normrnd(0, 1, [M,N]);
@@ -74,55 +74,55 @@ for iHiddenNeuron = 1:nrOfHiddenNeurons
         
             for iMiniBatch = 1: miniBatches
                 % Pick one pattern randomly from x1-x4
-                randPatternIndex = randi(nrOfPatterns/2);
-                feedPattern = XORInputs(:,randPatternIndex);
+                randomPatternIndex = randi(nrOfPatterns/2);
+                feedPattern = XORInputs(:,randomPatternIndex);
                 % Initiaize visible neurons as the feed pattern
-                v0 = feedPattern;
+                visbleNeuron0 = feedPattern;
                 
         
                 % Update hidden neurons, 
-                b0H = weights * v0 - thetaHidden;        % Local field, hidden neurons
+                LocalFieldHidden0 = weights * visbleNeuron0 - thetaHidden;        % Local field, hidden neurons
                 for i = 1:M
-                    pB0 = probability(b0H(i));
+                    pB0 = probability(LocalFieldHidden0(i));
                     randomNr = rand;
                     if randomNr < pB0
-                        h(i) = 1;
+                        hiddenNeurons(i) = 1;
                     else
-                        h(i) = -1;
+                        hiddenNeurons(i) = -1;
                     end
                 end
                 
                 
                 for t = 1:k
                     % Update visible neurons
-                    bV = weights' * h - thetaVisible;
+                    LocalFieldVisible = weights' * hiddenNeurons - thetaVisible;
                     for j = 1:N
-                        pBV = probability(bV(j));
+                        pBV = probability(LocalFieldVisible(j));
                         randomNr = rand;
                         if randomNr < pBV
-                            v(j) = 1;
+                            visibleNeurons(j) = 1;
                         else
-                            v(j) = -1;
+                            visibleNeurons(j) = -1;
                         end
                     end
         
                     % Update hidden neurons
-                    bH = weights * v - thetaHidden;
+                    LocalFieldHidden = weights * visibleNeurons - thetaHidden;
                     for i = 1:M
-                        pBH = probability(bH(i));
+                        pBH = probability(LocalFieldHidden(i));
                         randomNr = rand;
                         if randomNr < pBH
-                            h(i) = 1;
+                            hiddenNeurons(i) = 1;
                         else
-                            h(i) = -1;
+                            hiddenNeurons(i) = -1;
                         end
                     end
                 end
         
                 % Compute weight and threshold increments
-                deltaWeights = deltaWeights + eta*(tanh(b0H) * v0' - tanh(bH)*v');
-                deltaThetaVisible = deltaThetaVisible - eta*(v0 - v);
-                deltaThetaHidden = deltaThetaHidden - eta*(tanh(b0H) - tanh(bH));
+                deltaWeights = deltaWeights + eta*(tanh(LocalFieldHidden0) * visbleNeuron0' - tanh(LocalFieldHidden)*visibleNeurons');
+                deltaThetaVisible = deltaThetaVisible - eta*(visbleNeuron0 - visibleNeurons);
+                deltaThetaHidden = deltaThetaHidden - eta*(tanh(LocalFieldHidden0) - tanh(LocalFieldHidden));
         
               
             end
@@ -137,45 +137,45 @@ for iHiddenNeuron = 1:nrOfHiddenNeurons
             randomPatternIndex = randi(nrOfPatterns);
             feedPattern = allInputs(:,randomPatternIndex);
             % Initiaize visible neurons as the feed pattern
-            v = feedPattern;
+            visibleNeurons = feedPattern;
             
-            bH =  weights * v - thetaHidden;
+            LocalFieldHidden =  weights * visibleNeurons - thetaHidden;
             for i = 1:M
-                pBH = probability(bH(i));
+                pBH = probability(LocalFieldHidden(i));
                 randomNr = rand;
                 if randomNr < pBH
-                    h(i) = 1;
+                    hiddenNeurons(i) = 1;
                 else
-                    h(i) = -1;
+                    hiddenNeurons(i) = -1;
                 end
             end
         
         
             for iInner = 1:nIn
-                bV = weights' * h - thetaVisible;
+                LocalFieldVisible = weights' * hiddenNeurons - thetaVisible;
                 for j = 1:N
-                    pBV = probability(bV(j));
+                    pBV = probability(LocalFieldVisible(j));
                     randomNr = rand;
                     if randomNr < pBV
-                        v(j) = 1;
+                        visibleNeurons(j) = 1;
                     else
-                        v(j) = -1;
+                        visibleNeurons(j) = -1;
                     end
                 end
         
                 % Update hidden neurons
-                bH = weights * v - thetaHidden;
+                LocalFieldHidden = weights * visibleNeurons - thetaHidden;
                 for i = 1:M
-                    pBH = probability(bH(i));
+                    pBH = probability(LocalFieldHidden(i));
                     randomNr = rand;
                     if randomNr < pBH
-                        h(i) = 1;
+                        hiddenNeurons(i) = 1;
                     else
-                        h(i) = -1;
+                        hiddenNeurons(i) = -1;
                     end
                 end
                 for iPattern = 1:nrOfPatterns
-                    if v == allInputs(:,iPattern)
+                    if visibleNeurons == allInputs(:,iPattern)
                         pB(iPattern) = pB(iPattern) + 1/(nIn * nOut);
                     end
                 end
@@ -187,18 +187,19 @@ for iHiddenNeuron = 1:nrOfHiddenNeurons
         
         % Calculating the dkl
         for mu = 1:8
-            if pData(mu) ~= 0
+            if (pData(mu)~=0) && (pB(mu)~=0)  
                 dKLSumCounter(iCounter) = dKLSumCounter(iCounter) + pData(mu) * (log(pData(mu)) - log(pB(mu)));
             end
         end
 
     end
-    dKLSum(iHiddenNeuron) = sum(dKLSumCounter)/3;
+    dKLSum(iHiddenNeuron) = sum(dKLSumCounter)/1;    % Calculating the average out of 3 runs
 end
 
-plot(MValues,dKLSum,'ro')
+% Plotting the kullback-leiber divergence for the different M-values        
+plot(MValues,dKLSum,'ro','DisplayName','D_{KL}')
 xlabel('Number of hidden neurons [M]')
-ylabel('Kullback-leiber divergence [D_KL]')
+ylabel('Kullback-leiber divergence [D_{KL}]')
 
 
 
