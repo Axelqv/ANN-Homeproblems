@@ -18,7 +18,7 @@ nrOfPatterns = length(allInputs);
 trials = 1000;
 miniBatches = 20;
 k = 200;
-eta = 0.01;
+eta = 0.005;
 nOut = 3000;
 nIn = 2000;
 dKLSum = zeros(1,nrOfHiddenNeurons);
@@ -183,8 +183,8 @@ for iHiddenNeuron = 1:nrOfHiddenNeurons
     
     
     % Calculating the dkl
-    for mu = 1:8
-        if pData(mu) ~= 0
+    for mu = 1:4
+        if pB(mu) ~= 0
             dKLSum(iHiddenNeuron) = dKLSum(iHiddenNeuron) + pData(mu) * (log(pData(mu)) - log(pB(mu)));
         end
     end
