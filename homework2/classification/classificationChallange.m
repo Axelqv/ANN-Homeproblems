@@ -68,19 +68,22 @@ options = trainingOptions(...
 
 % Training the network
 trainingNetwork = trainNetwork(xTrain,tTrain,layers,options);
-save trainingNetwork
-%%
-load trainingNetwork.mat
+save trainingNetwork       % Saving the network, so I don't need to run 
+                           % it again
+
+%% Making the classification with the saved network written above
+load trainingNetwork.mat   % Getting the above saved network
+                           % to run this section
 
 
-% labelsX2Test = zeros(length)
+% Just to see the accuracy of classify the xTest data
+classifyXTest = classify(trainingNetwork,xTest);
+classificationAccuracy1 = sum(classifyXTest==tTest)/numel(tTest);
+
+% Classify xTest2 and write the result to a csv file
 classifyXTest2 = classify(trainingNetwork,xTest2);
 classifyXTest2 = string(classifyXTest2);
 classifyXTest2 = double(classifyXTest2);
-
-classifyXTest = classify(trainingNetwork,xTest);
-classificationAccuracy1 = sum(classifyXTest==tTest)/numel(tTest);
-len = length(classifyXTest2);
 csvwrite('classifications.csv',classifyXTest2);
 
 
